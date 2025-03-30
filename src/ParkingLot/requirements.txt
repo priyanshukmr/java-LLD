@@ -1,0 +1,11 @@
+Multilevel parking lot
+
+- multiple floors allowed
+- category of parking space (2wheeler, 4wheeler, large)
+- assign ticket on entry and redeem ticket collecting payment
+- should not allow more vehicles than allocated space for each categiry
+- charge hourly basis
+- display board for available count on each floor
+
+special requirement:
+- multiple entry  and exits allowed (think concurrency)
