@@ -1,9 +1,9 @@
-/*
-Applicaton should be able to initialise ratelimiter and keep granting access as required
- */
-
 package RateLimiter;
 
+/*
+Application code should be able to initialise RateLimiter for each user
+ */
+
 public interface RateLimiter {
-    boolean submitReqToBucket(int req);
+    boolean grantAccess(int reqId);
 }
