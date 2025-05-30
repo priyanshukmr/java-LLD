@@ -1,23 +1,25 @@
+/*
+Increment a shared common counter using 2 threads. It should be incremented exactly 2000 times.
+ */
+
 package Multithreading;
 import java.io.IOException;
 
-class SharedResource {
-    int cnt = 0;
+
+public class SafeIncrement {
+
+    static int cnt = 0;
 
     // remove sync and rerun to test
-    public synchronized void inc() {
+    public static synchronized void inc() {
         cnt++;
     }
-}
 
-
-public class ThreadSafeIncrement {
 
     public static void main(String[] args) throws IOException, InterruptedException {
-        SharedResource counter = new SharedResource();
         Runnable runnable = () -> {
             for(int i=0; i<1000;i++) {
-                counter.inc();
+                inc();
             }
         };
 
@@ -28,6 +30,6 @@ public class ThreadSafeIncrement {
         thread2.start();
         thread.join();
         thread2.join();
-        System.out.println(counter.cnt);  // 2000 when safe, 0-2000 otherwise
+        System.out.println(cnt);  // 2000 when safe, 0-2000 otherwise (run 5 times to be sure)
     }
 }
