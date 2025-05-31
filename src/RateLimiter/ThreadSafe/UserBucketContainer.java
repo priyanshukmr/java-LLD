@@ -1,22 +1,25 @@
 package RateLimiter.ThreadSafe;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 public class UserBucketContainer {
-    private Map<String, RateLimiter> userToBucket;
+    private final ConcurrentMap<String, RateLimiter> userToBucket;
 
     UserBucketContainer() {
-        userToBucket = new HashMap<String, RateLimiter>();
+        userToBucket = new ConcurrentHashMap<>();
     }
 
     public void addUser(String userId, RateLimiter rateLimiter) {
-        if(!userToBucket.containsKey(userId)) {
-            userToBucket.put(userId, rateLimiter);
-        }
+        userToBucket.putIfAbsent(userId, rateLimiter);
     }
 
+    // below method is only thread-safe because there is not removeUser feature
     public boolean grantAccess(String userId, int reqId) {
-        return userToBucket.get(userId).grantAccess(reqId);
+        RateLimiter rateLimiter = userToBucket.get(userId);
+        if(userId==null) {
+            return false;
+        }
+        return rateLimiter.grantAccess(reqId);
     }
 }
