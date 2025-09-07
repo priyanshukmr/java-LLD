@@ -82,6 +82,9 @@ package Multithreading;
 import java.util.*;
 import java.util.concurrent.Semaphore;
 
+/**
+ * https://leetcode.com/problems/design-bounded-blocking-queue/description/
+ */
 
 class BoundedBlockingQueue {
 
