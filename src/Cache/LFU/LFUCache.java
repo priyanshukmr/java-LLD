@@ -4,122 +4,60 @@ import java.util.*;
 
 /**
  * https://leetcode.com/problems/lfu-cache/
+ *
+ * using LinkedHashSet
  */
 
 class LFUCache {
 
-
-    static class Node {
-        int key;
-        int val;
-        int freq;
-        Node prev;
-        Node next;
-
-        Node(int key, int val, int freq){
-            this.freq = freq;
-            this.key = key;
-            this.val = val;
-        }
-    }
-
-    static class DoublyLinkedList {
-        Node head;
-        Node tail;
-
-        DoublyLinkedList() {
-            head = new Node(0, 0, 0);
-            tail = new Node(0, 0, 0);
-            head.next = tail;
-            tail.prev = head;
-        }
-
-        public void addMRU(Node n) {
-            n.next = head.next;
-            head.next.prev = n;
-            head.next = n;
-            n.prev = head;
-        }
-
-        public void remove(Node n) {
-            n.prev.next = n.next;
-            n.next.prev = n.prev;
-        }
-
-        boolean isEmpty() {
-            return head.next == tail;
-        }
-    }
-
-    Map<Integer, DoublyLinkedList> freqToList;
-    Map<Integer, Node> keyToNode;
     int capacity;
-    int sz;
-    int minFreq;
+    int minf;
+    Map<Integer, LinkedHashSet<Integer> > cache; // freq -> <LRU_set_keys>
+    Map<Integer, List<Integer>> keyMap; // key -> [freq, val]
 
     public LFUCache(int capacity) {
-        freqToList = new HashMap<>();
-        keyToNode = new HashMap<>();
-        sz = 0;
-        minFreq = 1;
+        cache = new HashMap<>();
+        keyMap = new HashMap<>();
         this.capacity = capacity;
+        this.minf = 1;
+    }
+
+    private void insert(int key, int val, int freq) {
+        LinkedHashSet<Integer> updatedSet = cache.getOrDefault(freq, new LinkedHashSet<>());
+        updatedSet.add(key);
+        cache.put(freq, updatedSet);
+        keyMap.put(key, List.of(freq, val));
+    }
+
+    private void remove(int key, int freq) {
+        cache.get(freq).remove(key);
+        if(cache.get(freq).size()==0 && freq==minf) {
+            minf++;
+        }
+        keyMap.remove(key);
     }
 
     public int get(int key) {
-        if(!keyToNode.containsKey(key)) return -1;
-        Node found = keyToNode.get(key);
-        int freq = found.freq;
-        freqToList.get(freq).remove(found);
-        keyToNode.remove(key);
-        if(freqToList.get(freq).isEmpty()) {
-            freqToList.remove(freq);
-            if(freq==minFreq)
-                minFreq++;
-        }
-        DoublyLinkedList list = freqToList.getOrDefault(freq+1, new DoublyLinkedList());
-        Node node = new Node(key, found.val, freq+1);
-        list.addMRU(node);
-        freqToList.put(freq+1, list);
-        keyToNode.put(key, node);
-        return found.val;
+        if(!keyMap.containsKey(key)) return -1;
+        int freq = keyMap.get(key).get(0);
+        int val = keyMap.get(key).get(1);
+        remove(key, freq);
+        insert(key, val, freq+1);
+        return val;
     }
 
     public void put(int key, int value) {
-        int freq;
-        //handleRemoval
-        if(!keyToNode.containsKey(key)) {
-            if(sz==capacity) {
-                DoublyLinkedList minList = freqToList.get(minFreq);
-                Node LRU = minList.tail.prev;
-                minList.remove(LRU);
-                if(minList.isEmpty()) {
-                    freqToList.remove(minFreq);
-                }
-                keyToNode.remove(LRU.key);
+        if(!keyMap.containsKey(key)) {
+            if(keyMap.size()==capacity) {
+                remove(cache.get(minf).iterator().next(), minf);
             }
-            else {
-                sz++;
-            }
-            freq = 1;
-            minFreq = 1;
+            insert(key, value, 1);
+            minf=1;
+            return;
         }
-        else {
-            freq = keyToNode.get(key).freq +1;
-            DoublyLinkedList list = freqToList.get(keyToNode.get(key).freq);
-            list.remove(keyToNode.get(key));
-            if(list.isEmpty()) {
-                freqToList.remove(keyToNode.get(key).freq);
-                if(minFreq==keyToNode.get(key).freq) {
-                    minFreq = freq;
-                }
-            }
-        }
-        // handle addition
-        Node node = new Node(key, value, freq);
-        DoublyLinkedList list = freqToList.getOrDefault(freq, new DoublyLinkedList());
-        list.addMRU(node);
-        freqToList.put(freq, list);
-        keyToNode.put(key, node);
+        int freq = keyMap.get(key).get(0);
+        remove(key, freq);
+        insert(key, value, freq+1);
     }
 }
 
